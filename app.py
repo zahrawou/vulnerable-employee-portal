@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify, render_template, g, session
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey123"   # VULN: hardcoded weak secret
-DB_PATH = "/home/claude/vuln_app/employees.db"
+DB_PATH = "employees.db"
 
 # ──────────────────────────────────────────────
 #  DATABASE HELPERS
