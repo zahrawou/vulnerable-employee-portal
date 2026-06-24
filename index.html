@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Department — Employee Portal</title>
+<style>
+  :root {
+    --bg:#0d1117; --surface:#161b22; --surface2:#21262d; --border:#30363d;
+    --accent:#58a6ff; --danger:#f85149; --warn:#e3b341; --ok:#3fb950;
+    --text:#e6edf3; --muted:#8b949e; --font:'Courier New',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+
+  /* LOGIN */
+  #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:44px 48px;width:100%;max-width:440px;}
+  .login-card h1{color:var(--accent);font-size:1.4rem;margin-bottom:6px;}
+  .login-card p{color:var(--muted);font-size:.82rem;margin-bottom:24px;}
+  .hint{font-size:.72rem;color:var(--muted);margin-top:14px;text-align:center;line-height:1.6;}
+
+  /* HEADER */
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .logo{font-size:1.1rem;font-weight:700;color:var(--accent);letter-spacing:.04em;}
+  .logo span{color:var(--muted);font-weight:400;}
+  nav{display:flex;flex-wrap:wrap;gap:6px;}
+  nav button{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 13px;cursor:pointer;font-family:var(--font);font-size:.8rem;border-radius:4px;transition:.15s;}
+  nav button:hover,nav button.active{border-color:var(--accent);color:var(--accent);}
+  nav button.danger-btn{border-color:var(--danger);color:var(--danger);}
+
+  /* PAGES */
+  .page{display:none;padding:28px;max-width:1100px;margin:0 auto;}
+  .page.active{display:block;}
+  h2{font-size:1.25rem;margin-bottom:18px;letter-spacing:.03em;}
+
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 28px;margin-bottom:20px;}
+
+  /* FORM ELEMENTS */
+  label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:4px;margin-top:14px;text-transform:uppercase;letter-spacing:.06em;}
+  input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 11px;font-family:var(--font);font-size:.86rem;border-radius:4px;outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+  textarea{resize:vertical;min-height:64px;}
+  .btn{margin-top:16px;padding:9px 22px;background:var(--accent);color:#0d1117;border:none;border-radius:4px;font-family:var(--font);font-size:.86rem;font-weight:700;cursor:pointer;transition:opacity .15s;}
+  .btn:hover{opacity:.85;}
+  .btn.danger{background:var(--danger);color:#fff;}
+  .btn.warn{background:var(--warn);color:#0d1117;}
+  .btn.sm{padding:4px 10px;font-size:.72rem;margin-top:0;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.row2{grid-template-columns:1fr;}}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;}
+  thead th{text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;padding:8px 10px;border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border);}
+  tbody tr:hover{background:var(--surface2);}
+  tbody td{padding:9px 10px;vertical-align:middle;}
+
+  /* STATS */
+  .stats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
+  .stat-box{flex:1;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 18px;}
+  .stat-box .num{font-size:1.7rem;font-weight:700;color:var(--accent);}
+  .stat-box .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;}
+
+  /* TAGS */
+  .vtag{display:inline-block;font-size:.62rem;padding:2px 6px;border-radius:3px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:5px;vertical-align:middle;}
+  .sqli{background:#ff7b2c22;color:#ff7b2c;border:1px solid #ff7b2c55;}
+  .xss{background:#f8514922;color:#f85149;border:1px solid #f8514955;}
+  .idor{background:#e3b34122;color:#e3b341;border:1px solid #e3b34155;}
+  .auth{background:#bc8cff22;color:#bc8cff;border:1px solid #bc8cff55;}
+  .ransom{background:#f8514933;color:#f85149;border:1px solid #f8514999;animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+  .chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;}
+  .chip-blue{background:#58a6ff22;color:#58a6ff;}
+  .chip-green{background:#3fb95022;color:#3fb950;}
+  .chip-warn{background:#e3b34122;color:#e3b341;}
+  .chip-red{background:#f8514922;color:#f85149;}
+
+  .muted{color:var(--muted);font-size:.8rem;}
+  .mt8{margin-top:8px;}
+  .mb12{margin-bottom:12px;}
+
+  /* SQL DISPLAY */
+  .sql-box{background:var(--surface2);padding:11px 14px;border-radius:4px;font-size:.78rem;border:1px solid var(--border);margin-bottom:16px;word-break:break-all;line-height:1.6;display:none;}
+  .sql-box.injected{border-color:var(--danger);color:var(--danger);}
+  .sql-box.normal{color:var(--warn);}
+
+  /* COMMENTS */
+  .c-item{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:10px 13px;margin-bottom:8px;font-size:.83rem;}
+  .c-author{color:var(--accent);font-weight:700;font-size:.74rem;margin-bottom:4px;}
+
+  /* RANSOMWARE OVERLAY */
+  #ransom-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;align-items:center;justify-content:center;}
+  #ransom-overlay.show{display:flex;}
+  .ransom-box{background:#1a0000;border:2px solid var(--danger);border-radius:10px;padding:44px 52px;max-width:540px;text-align:center;}
+  .ransom-box h1{color:var(--danger);font-size:1.8rem;margin-bottom:14px;}
+  .ransom-box p{color:var(--text);line-height:1.7;margin-bottom:10px;font-size:.88rem;}
+  .ransom-key{font-size:.78rem;color:var(--warn);word-break:break-all;background:#0d1117;padding:11px;border-radius:4px;margin:16px 0;}
+  .ransom-counter{font-size:2.2rem;color:var(--danger);font-weight:700;margin:14px 0;}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:6px;font-size:.83rem;font-weight:700;display:none;z-index:9998;max-width:380px;line-height:1.5;}
+  #toast.ok{background:var(--ok);color:#0d1117;}
+  #toast.error{background:var(--danger);color:#fff;}
+  #toast.warn{background:var(--warn);color:#0d1117;}
+
+  #loading{color:var(--muted);font-size:.82rem;padding:12px 0;}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>CS Department</h1>
+    <p>Employee Management Portal — Internal Use Only</p>
+
+    <label>Username <span class="vtag sqli">SQLi</span></label>
+    <input id="l-user" placeholder="admin' -- " />
+
+    <label>Password <span class="vtag auth">Plaintext DB</span></label>
+    <input id="l-pass" type="password" placeholder="any password if using SQLi" />
+
+    <button class="btn" onclick="doLogin()" style="width:100%;margin-top:20px;">Sign In</button>
+    <p class="hint">
+      Normal login: <strong>admin / admin123</strong><br>
+      SQL Injection bypass: username = <strong>admin' --</strong> (any password)
+    </p>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════ -->
+<div id="app" style="display:none;">
+  <header>
+    <div class="logo">CS-EMP <span>/ Computer Science Dept</span></div>
+    <nav>
+      <button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+      <button onclick="showPage('register',this)">Register</button>
+      <button onclick="showPage('employees',this)">Employees</button>
+      <button onclick="showPage('search',this)">Search <span class="vtag sqli">SQLi</span></button>
+      <button onclick="showPage('comments',this)">Board <span class="vtag xss">XSS</span></button>
+      <button onclick="showPage('files',this)">Files <span class="vtag ransom">⚠</span></button>
+      <button class="danger-btn" onclick="doLogout()">Logout</button>
+    </nav>
+  </header>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <h2>Dashboard</h2>
+    <div class="stats" id="stats-row"><div id="loading">Loading stats…</div></div>
+    <div class="card">
+      <h3 style="color:var(--muted);font-size:.9rem;margin-bottom:12px;">Recent Employees</h3>
+      <div class="table-wrap">
+        <table><thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Type</th><th>Specialization</th></tr></thead>
+        <tbody id="dash-tbody"></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--muted);font-size:.9rem;margin-bottom:12px;">⚠ Active Vulnerabilities</h3>
+      <table><thead><tr><th>#</th><th>Type</th><th>Where</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><span class="vtag sqli">SQLi</span></td><td>Login + Search (real SQLite queries)</td><td>Auth bypass, full table dump, UNION attacks</td></tr>
+        <tr><td>2</td><td><span class="vtag xss">XSS</span></td><td>Register form + Comment board</td><td>Stored HTML/JS executes for all viewers</td></tr>
+        <tr><td>3</td><td><span class="vtag idor">IDOR</span></td><td>GET /api/employees/:id</td><td>Direct integer ID access, no ownership check</td></tr>
+        <tr><td>4</td><td><span class="vtag auth">Broken Auth</span></td><td>Users table</td><td>Passwords stored & returned in plaintext</td></tr>
+        <tr><td>5</td><td><span class="vtag ransom">Ransomware</span></td><td>File Manager</td><td>Simulated encrypt of all DB filenames</td></tr>
+        <tr><td>6</td><td><span class="vtag xss">No Validation</span></td><td>All POST endpoints</td><td>No sanitization, length check, or type enforcement</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="page" id="page-register">
+    <h2>Register Employee <span class="vtag xss">No Validation</span><span class="vtag auth">Plaintext PW</span></h2>
+    <div class="card">
+      <p class="muted mb12">⚠ Zero server-side validation. All input stored raw in SQLite and rendered with innerHTML (Stored XSS).</p>
+      <div class="row2">
+        <div>
+          <label>Employee ID</label>
+          <input id="r-id" placeholder='EMP-006 or &lt;script&gt;alert(1)&lt;/script&gt;'/>
+        </div>
+        <div>
+          <label>Full Name <span class="vtag xss">XSS</span></label>
+          <input id="r-name" placeholder='<img src=x onerror=alert("XSS name")>'/>
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Department</label>
+          <select id="r-dept">
+            <option>Computer Science</option>
+            <option>Software Engineering</option>
+            <option>Networks & Security</option>
+            <option>AI & Data Science</option>
+            <option>Systems & Architecture</option>
+          </select>
+        </div>
+        <div>
+          <label>Worker Type</label>
+          <select id="r-type">
+            <option>Professor</option><option>Associate Professor</option>
+            <option>Lecturer</option><option>Lab Technician</option>
+            <option>PhD Researcher</option><option>Admin Staff</option>
+          </select>
+        </div>
+      </div>
+      <label>Specialization</label>
+      <input id="r-spec" placeholder="e.g. Cybersecurity, Machine Learning…"/>
+      <div class="row2">
+        <div>
+          <label>Email <span class="vtag xss">No format check</span></label>
+          <input id="r-email" placeholder="not-checked@all"/>
+        </div>
+        <div>
+          <label>Password <span class="vtag auth">Stored plaintext</span></label>
+          <input id="r-pass" type="text" placeholder="Stored in plaintext — no hashing"/>
+        </div>
+      </div>
+      <label>Notes / Bio <span class="vtag xss">innerHTML</span></label>
+      <textarea id="r-notes" placeholder='<script>document.title="HACKED"</script>'></textarea>
+      <button class="btn" onclick="registerEmployee()">Register Employee</button>
+    </div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div class="page" id="page-employees">
+    <h2>All Employees <span class="vtag idor">IDOR</span><span class="vtag auth">Passwords Exposed</span></h2>
+    <p class="muted mt8 mb12">Records fetched from SQLite. No auth check on API. Direct ID access possible via GET /api/employees/:id</p>
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>ID</th><th>Emp ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Spec.</th><th>Email</th>
+          <th>Password <span class="vtag auth">Plain</span></th><th>Actions</th>
+        </tr></thead>
+        <tbody id="emp-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH (real SQLi) -->
+  <div class="page" id="page-search">
+    <h2>Search <span class="vtag sqli">Real SQL Injection</span></h2>
+    <div class="card">
+      <p class="muted mb12">Runs a real SQLite query with string interpolation. Try injection payloads below.</p>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <label>Search term</label>
+          <input id="sq-input" placeholder="' OR '1'='1  or  ' UNION SELECT …"/>
+        </div>
+        <button class="btn" style="margin-top:0;" onclick="doSearch()">Run Query</button>
+      </div>
+
+      <div id="sql-box" class="sql-box"></div>
+
+      <div style="margin-bottom:10px;">
+        <span style="font-size:.72rem;color:var(--muted);">Quick payloads: </span>
+        <button class="btn sm" style="background:var(--surface2);color:var(--warn);border:1px solid var(--border);" onclick="setPayload(`' OR '1'='1`)">Dump all</button>
+        <button class="btn sm" style="background:var(--surface2);color:var(--warn);border:1px solid var(--border);margin-left:4px;" onclick="setPayload(`' UNION SELECT id,username,password,password,password,password,password,password,password,datetime('now') FROM users--`)">Dump users table</button>
+        <button class="btn sm" style="background:var(--surface2);color:var(--warn);border:1px solid var(--border);margin-left:4px;" onclick="setPayload(`'; DROP TABLE employees; --`)">DROP TABLE</button>
+      </div>
+
+      <div class="table-wrap">
+        <table><thead><tr><th>ID</th><th>Emp ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Email</th><th>Password</th></tr></thead>
+        <tbody id="search-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMENTS (Stored XSS) -->
+  <div class="page" id="page-comments">
+    <h2>Staff Notice Board <span class="vtag xss">Stored XSS</span></h2>
+    <div class="card">
+      <p class="muted mb12">Stored in SQLite, retrieved and rendered with <code>innerHTML</code> — any HTML/JS you post executes for all users.</p>
+      <label>Your name</label>
+      <input id="c-name" placeholder='HR<script>alert("XSS from DB")</script>'/>
+      <label>Message <span class="vtag xss">innerHTML</span></label>
+      <textarea id="c-msg" placeholder='<b>bold text</b> or <img src=x onerror=alert(document.cookie)>'></textarea>
+      <button class="btn" onclick="postComment()">Post Message</button>
+    </div>
+    <div id="comment-list"></div>
+  </div>
+
+  <!-- FILES (Ransomware) -->
+  <div class="page" id="page-files">
+    <h2>File Manager <span class="vtag ransom">⚠ Ransomware Sim</span></h2>
+    <div class="card">
+      <p class="muted mb12">Files stored in SQLite. "Encrypt" renames all records to base64.locked — simulating ransomware hitting the DB.</p>
+      <div id="file-list"></div>
+      <button class="btn warn" onclick="uploadFile()">+ Upload File</button>
+      <button class="btn danger" onclick="triggerRansomware()" style="margin-left:8px;">⚠ Run Ransomware Payload</button>
+    </div>
+  </div>
+</div>
+
+<!-- RANSOMWARE OVERLAY -->
+<div id="ransom-overlay">
+  <div class="ransom-box">
+    <h1>⚠ FILES ENCRYPTED</h1>
+    <p>All SQLite file records have been renamed with AES-256 simulation. Your data is inaccessible.</p>
+    <div class="ransom-key" id="ransom-key"></div>
+    <p>Send <strong>0.5 BTC</strong> within:</p>
+    <div class="ransom-counter" id="ransom-counter">47:59:59</div>
+    <p style="color:var(--muted);font-size:.75rem;">SIMULATION ONLY — demonstrates ransomware impact on unprotected databases.</p>
+    <button class="btn danger" onclick="dismissRansom()" style="margin-top:16px;">Dismiss Simulation</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = "";   // same origin
+let ransomTimer = null;
+
+// ── AUTH ──────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById("l-user").value;
+  const password = document.getElementById("l-pass").value;
+  const res = await fetch(API+"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
+  const d = await res.json();
+  if (d.ok) {
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("app").style.display="block";
+    toast(`Logged in as "${d.user}"`, "warn");
+    toast(`SQLite query: ${d.query}`, "warn");
+    loadDashboard();
+  } else {
+    toast(`Login failed. Query: ${d.query}`, "error");
+  }
+}
+async function doLogout() {
+  await fetch(API+"/api/logout",{method:"POST"});
+  document.getElementById("app").style.display="none";
+  document.getElementById("login-screen").style.display="flex";
+}
+
+// ── NAVIGATION ────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if(btn) btn.classList.add("active");
+  if(id==="employees") loadEmployees();
+  if(id==="comments")  loadComments();
+  if(id==="files")     loadFiles();
+}
+
+// ── DASHBOARD ─────────────────────────────────
+async function loadDashboard() {
+  const s = await fetch(API+"/api/stats").then(r=>r.json());
+  document.getElementById("stats-row").innerHTML=`
+    <div class="stat-box"><div class="num">${s.employees}</div><div class="lbl">Employees</div></div>
+    <div class="stat-box"><div class="num">${s.departments}</div><div class="lbl">Departments</div></div>
+    <div class="stat-box"><div class="num">${s.comments}</div><div class="lbl">Board Posts</div></div>
+    <div class="stat-box"><div class="num">${s.files}</div><div class="lbl">Files</div></div>
+  `;
+  const emps = await fetch(API+"/api/employees").then(r=>r.json());
+  const tbody = document.getElementById("dash-tbody");
+  tbody.innerHTML="";
+  emps.slice(0,5).forEach(e=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${e.id}</td><td>${e.name}</td><td><span class="chip chip-blue">${e.department}</span></td><td>${e.worker_type}</td><td>${e.specialization}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── REGISTER ──────────────────────────────────
+async function registerEmployee() {
+  const emp={
+    emp_id:       document.getElementById("r-id").value||"EMP-AUTO",
+    name:         document.getElementById("r-name").value,
+    department:   document.getElementById("r-dept").value,
+    worker_type:  document.getElementById("r-type").value,
+    specialization:document.getElementById("r-spec").value,
+    email:        document.getElementById("r-email").value,
+    password:     document.getElementById("r-pass").value,
+    notes:        document.getElementById("r-notes").value,
+  };
+  if(!emp.name){toast("Name required","error");return;}
+  const res=await fetch(API+"/api/employees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(emp)});
+  const d=await res.json();
+  if(d.ok){
+    toast("Stored in SQLite — no validation applied","warn");
+    ["r-id","r-name","r-spec","r-email","r-pass","r-notes"].forEach(id=>document.getElementById(id).value="");
+    loadDashboard();
+  }
+}
+
+// ── EMPLOYEES ─────────────────────────────────
+async function loadEmployees() {
+  const emps=await fetch(API+"/api/employees").then(r=>r.json());
+  const tbody=document.getElementById("emp-tbody");
+  tbody.innerHTML="";
+  emps.forEach(e=>{
+    const tr=document.createElement("tr");
+    // VULN: innerHTML — stored XSS from DB renders here
+    tr.innerHTML=`
+      <td>${e.id}</td>
+      <td>${e.emp_id}</td>
+      <td>${e.name}</td>
+      <td><span class="chip chip-blue">${e.department}</span></td>
+      <td>${e.worker_type}</td>
+      <td>${e.specialization}</td>
+      <td>${e.email}</td>
+      <td style="color:var(--warn)">${e.password}</td>
+      <td>
+        <button class="btn sm" onclick="viewIDOR(${e.id})">IDOR</button>
+        <button class="btn sm danger" onclick="deleteEmp(${e.id})" style="margin-left:4px;">Del</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function viewIDOR(id) {
+  const e=await fetch(API+"/api/employees/"+id).then(r=>r.json());
+  alert(`IDOR: GET /api/employees/${id} — no auth check\n\nName: ${e.name}\nDept: ${e.department}\nPassword (plaintext): ${e.password}\nNotes: ${e.notes}`);
+}
+
+async function deleteEmp(id) {
+  await fetch(API+"/api/employees/"+id,{method:"DELETE"});
+  loadEmployees();
+  loadDashboard();
+  toast("Deleted from SQLite — no audit log","warn");
+}
+
+// ── SEARCH ────────────────────────────────────
+function setPayload(p){document.getElementById("sq-input").value=p;}
+
+async function doSearch() {
+  const q=document.getElementById("sq-input").value;
+  const res=await fetch(API+"/api/search?q="+encodeURIComponent(q));
+  const d=await res.json();
+
+  const box=document.getElementById("sql-box");
+  box.style.display="block";
+  box.className="sql-box "+(d.injected||d.error?"injected":"normal");
+  box.textContent=(d.error?"⚠ SQLite ERROR: "+d.error+"\n":
+                   (d.injected?"⚠ INJECTION DETECTED — dumped "+d.results.length+" rows\n":""))
+                  +"> "+d.query;
+
+  if(d.injected||/OR|UNION/i.test(q)) toast("SQL Injection hit! Check results.","error");
+
+  const tbody=document.getElementById("search-tbody");
+  tbody.innerHTML="";
+  (d.results||[]).forEach(e=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${e.id}</td><td>${e.emp_id||""}</td><td>${e.name||""}</td><td>${e.department||""}</td><td>${e.worker_type||""}</td><td>${e.email||""}</td><td style="color:var(--warn)">${e.password||""}</td>`;
+    tbody.appendChild(tr);
+  });
+  if(!d.results||!d.results.length)
+    tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted);padding:14px;">No results.</td></tr>';
+}
+
+// ── COMMENTS ──────────────────────────────────
+async function loadComments() {
+  const list=document.getElementById("comment-list");
+  list.innerHTML="";
+  const comments=await fetch(API+"/api/comments").then(r=>r.json());
+  comments.forEach(c=>{
+    const div=document.createElement("div");
+    div.className="c-item";
+    // VULN: innerHTML — XSS from SQLite DB
+    div.innerHTML=`<div class="c-author">${c.author} · ${c.posted_at||""}</div>${c.message}`;
+    list.appendChild(div);
+  });
+}
+
+async function postComment() {
+  const author=document.getElementById("c-name").value||"Anonymous";
+  const message=document.getElementById("c-msg").value;
+  if(!message) return;
+  await fetch(API+"/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({author,message})});
+  document.getElementById("c-name").value="";
+  document.getElementById("c-msg").value="";
+  loadComments();
+  toast("Comment stored in SQLite — rendered as raw HTML","warn");
+}
+
+// ── FILES ─────────────────────────────────────
+async function loadFiles() {
+  const files=await fetch(API+"/api/files").then(r=>r.json());
+  const list=document.getElementById("file-list");
+  list.innerHTML=files.map(f=>`
+    <div style="padding:8px 12px;background:var(--surface2);border:1px solid ${f.locked?"var(--danger)":"var(--border)"};border-radius:4px;margin-bottom:6px;font-size:.83rem;display:flex;align-items:center;gap:10px;">
+      <span style="color:${f.locked?"var(--danger)":"var(--accent)"};">${f.locked?"🔒":"📄"}</span>
+      <span style="color:${f.locked?"var(--danger)":"var(--text)"};">${f.filename}</span>
+      <span style="margin-left:auto;font-size:.7rem;color:var(--muted);">${f.locked?"ENCRYPTED":"R/W — no ACL"}</span>
+    </div>`).join("");
+}
+
+async function uploadFile() {
+  const name=prompt("Filename to upload (no validation):");
+  if(!name) return;
+  await fetch(API+"/api/files",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({filename:name})});
+  loadFiles();
+  toast("Added to SQLite — no extension check, no AV scan","warn");
+}
+
+async function triggerRansomware() {
+  await fetch(API+"/api/files/encrypt",{method:"POST"});
+  loadFiles();
+  const key=Array.from({length:64},()=>"0123456789abcdef"[Math.floor(Math.random()*16)]).join("").toUpperCase();
+  document.getElementById("ransom-key").textContent="1A2B-"+key.match(/.{8}/g).join("-");
+  document.getElementById("ransom-overlay").classList.add("show");
+  let total=48*3600-1;
+  ransomTimer=setInterval(()=>{
+    total--;
+    if(total<=0){clearInterval(ransomTimer);return;}
+    const h=String(Math.floor(total/3600)).padStart(2,"0");
+    const m=String(Math.floor((total%3600)/60)).padStart(2,"0");
+    const s=String(total%60).padStart(2,"0");
+    document.getElementById("ransom-counter").textContent=`${h}:${m}:${s}`;
+  },1000);
+}
+
+async function dismissRansom() {
+  clearInterval(ransomTimer);
+  document.getElementById("ransom-overlay").classList.remove("show");
+  await fetch(API+"/api/files/decrypt",{method:"POST"});
+  loadFiles();
+  toast("Simulation dismissed. In a real attack, decryption requires the attacker's key.","warn");
+}
+
+// ── TOAST ─────────────────────────────────────
+let toastTimer=null;
+function toast(msg,type="ok"){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.className=type; t.style.display="block";
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.style.display="none";},5000);
+}
+</script>
+</body>
+</html>
